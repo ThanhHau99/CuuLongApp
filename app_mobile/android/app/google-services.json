@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "53895561073",
+    "firebase_url": "https://celtic-truck-312915-default-rtdb.firebaseio.com",
+    "project_id": "celtic-truck-312915",
+    "storage_bucket": "celtic-truck-312915.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:53895561073:android:dd97ca1e7f101cfc6100d0",
+        "android_client_info": {
+          "package_name": "com.example.app_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "53895561073-m4rlbevoh4i0sdp4dn29noe4cspqhe14.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDe1SOJWRpbUL8rrNK5WJulkdpgUikyXPA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "53895561073-m4rlbevoh4i0sdp4dn29noe4cspqhe14.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:53895561073:android:53af13df5bd093e56100d0",
+        "android_client_info": {
+          "package_name": "com.example.local"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "53895561073-m4rlbevoh4i0sdp4dn29noe4cspqhe14.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDe1SOJWRpbUL8rrNK5WJulkdpgUikyXPA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "53895561073-m4rlbevoh4i0sdp4dn29noe4cspqhe14.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
