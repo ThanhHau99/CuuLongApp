@@ -58,14 +58,52 @@ class DatabaseService {
     });
   }
 
+  Future deleteIdSensor(
+    int idSensor,
+  ) async {
+    AppUser appUser = await userData.first;
+    debugPrint("App User to delete sensor: ${appUser.uid}");
+
+    var existedList = appUser.idSensors;
+    existedList.removeAt(idSensor);
+
+    await userCollection.doc(uid).set({
+      'email': appUser.email,
+      'name': appUser.name,
+      'phone': appUser.phone,
+      //'password': appUser.password,
+      'idSensors': existedList,
+      'idDevices': appUser.idDevices,
+    });
+  }
+
   Future updateIdDevices(
     String idDevice,
   ) async {
     AppUser appUser = await userData.first;
-    debugPrint("App User to update sensor list: ${appUser.uid}");
+    debugPrint("App User to update device: ${appUser.uid}");
 
     var existedList = appUser.idDevices;
     existedList.add(idDevice);
+
+    await userCollection.doc(uid).set({
+      'email': appUser.email,
+      'name': appUser.name,
+      'phone': appUser.phone,
+      //'password': appUser.password,
+      'idSensors': appUser.idSensors,
+      'idDevices': existedList,
+    });
+  }
+
+  Future deleteIdDevices(
+    String idDevice,
+  ) async {
+    AppUser appUser = await userData.first;
+    debugPrint("App User to delete sensor list: ${appUser.uid}");
+
+    var existedList = appUser.idDevices;
+    existedList.remove(idDevice);
 
     await userCollection.doc(uid).set({
       'email': appUser.email,

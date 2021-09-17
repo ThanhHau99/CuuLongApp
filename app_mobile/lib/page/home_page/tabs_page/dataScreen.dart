@@ -8,6 +8,7 @@ import 'package:app_mobile/share/widget_card.dart';
 import 'package:app_mobile/share/widget_row.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -23,6 +24,7 @@ class _DataScreenState extends State<DataScreen> {
   @override
   Void initState() {
     super.initState();
+    _loadDataStatus();
 
     var androidInitialize = new AndroidInitializationSettings('logo');
 
@@ -49,7 +51,7 @@ class _DataScreenState extends State<DataScreen> {
     await localNotifications.show(0, title, body, generalNotificationDetails);
   }
 
-  Future<List<DataStatus>> _loadDataStatus() async {
+  void _loadDataStatus() async {
     List<String> sensorList =
         await DatabaseService(uid: FirebaseAuth.instance.currentUser.uid)
             .getIdSensors();
@@ -83,19 +85,21 @@ class _DataScreenState extends State<DataScreen> {
           dataList.add(data);
         }
       }
+      setState(() {
+        //
+      });
     });
-    return dataList;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "Trang chủ",
+        appBar: AppBar(
+          title: Text(
+            "Trang chủ",
+          ),
         ),
-      ),
-      body: RefreshIndicator(
+        body: RefreshIndicator(
           onRefresh: () {
             Navigator.pushReplacement(
                 context,
@@ -104,25 +108,27 @@ class _DataScreenState extends State<DataScreen> {
                     transitionDuration: Duration(seconds: 0)));
             return Future.value(false);
           },
-          child: FutureBuilder(
-            future: _loadDataStatus(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(
-                  child: CircularProgressIndicator(),
-                );
-              } else if (dataList.length == 0) {
-                return Center(
-                  child: Text(
-                    "Không có Sensor !",
-                    style: TextStyle(fontSize: 23),
-                  ),
-                );
-              }
-              return _buildList();
-            },
-          )),
-    );
+          child: dataList.length == 0 ? _buildWaitContainer() : _buildList(),
+        ));
+  }
+
+  Widget _buildWaitContainer() {
+    return FutureBuilder(
+        future: Future.delayed(Duration(seconds: 7)),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          } else {
+            return Center(
+              child: Text(
+                'Không có Sensor!',
+                style: TextStyle(fontSize: 23),
+              ),
+            );
+          }
+        });
   }
 
   Widget _buildList() {
@@ -145,9 +151,25 @@ class _DataScreenState extends State<DataScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(bottom: 15),
-                    child: Text(
-                      dataList[index].name.toString(),
-                      style: AppStyle.h3.copyWith(color: Colors.black54),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          dataList[index].name.toString(),
+                          style: AppStyle.h3.copyWith(color: Colors.black54),
+                        ),
+                        GestureDetector(
+                          child: Icon(
+                            Icons.delete,
+                            color: Colors.black54,
+                            size: 25,
+                          ),
+                          onTap: () {
+                            print("kkkkkkk");
+                            showArlet(index);
+                          },
+                        )
+                      ],
                     ),
                   ),
                   WidgetRow(
@@ -188,5 +210,50 @@ class _DataScreenState extends State<DataScreen> {
       return true;
     }
     return false;
+  }
+
+  void deleteData(int index) async {
+    setState(() {
+      print("delete: ${dataList[index].id}");
+      dataList.removeAt(index);
+    });
+    await DatabaseService(uid: FirebaseAuth.instance.currentUser.uid)
+        .deleteIdSensor(index);
+  }
+
+  void showArlet(int index) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        insetAnimationCurve: Curves.bounceInOut,
+        title: Text(
+          "Thông báo",
+          style: TextStyle(fontSize: 23),
+        ),
+        content: Text(
+          "Bạn có muốn xóa Sensor?",
+          style: TextStyle(fontSize: 19),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: Text("Đồng ý", style: TextStyle(fontSize: 20)),
+            onPressed: () {
+              print("Dong y");
+              deleteData(index);
+              Navigator.pop(context);
+            },
+            isDefaultAction: true, // Chỉnh in đậm cho button
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true, // chỉnh màu đỏ cho nút bấm
+            child: Text("Hủy bỏ", style: TextStyle(fontSize: 20)),
+            onPressed: () {
+              print("Hủy bỏ");
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
   }
 }

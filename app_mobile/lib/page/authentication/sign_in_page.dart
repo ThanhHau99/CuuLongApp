@@ -6,6 +6,7 @@ import 'package:app_mobile/share/app_color.dart';
 import 'package:app_mobile/share/app_images.dart';
 import 'package:app_mobile/share/app_style.dart';
 import 'package:app_mobile/share/app_textflie.dart';
+import 'package:app_mobile/share/loading_task.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
@@ -23,6 +24,7 @@ class SignInPage extends StatefulWidget {
 
 class _SignInPageState extends State<SignInPage> {
   bool _showPass = false;
+  bool loading = false;
   final TextEditingController _txtEmailController = TextEditingController();
   final TextEditingController _txtPassController = TextEditingController();
 
@@ -34,23 +36,27 @@ class _SignInPageState extends State<SignInPage> {
       child: Consumer<SignInBloc>(
         builder: (context, bloc, child) => Scaffold(
           resizeToAvoidBottomInset: false,
-          body: Container(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: _buildLogoApp(),
-                ),
-                Expanded(
-                  flex: 4,
-                  child: _buildContainer(bloc),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: _buildSignUp(),
-                ),
-              ],
+          body: LoadingTask(
+            loading: loading,
+            child: Container(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Expanded(flex: 1, child: Container()),
+                  Expanded(
+                    flex: 3,
+                    child: _buildLogoApp(),
+                  ),
+                  Expanded(
+                    flex: 4,
+                    child: _buildContainer(bloc),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: _buildSignUp(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -190,29 +196,41 @@ class _SignInPageState extends State<SignInPage> {
           text: 'Đăng nhập',
           style: AppStyle.h4,
           onpressButton: enable
-              ? () async {
-                  print("dang nhap");
-                  dynamic result = await _auth.signInWithEmailAndPassword(
-                      email: _txtEmailController.text.trim(),
-                      password: _txtPassController.text.trim());
-
-                  if (result == 'Welcome') {
-                    print('sign in');
-                    Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HomePage(),
-                        ),
-                        (route) => false);
-                  } else {
-                    print('erro login : $result');
-                    showErrAlert(result);
-                  }
+              ? () {
+                  setState(() {
+                    loading = true;
+                  });
+                  signInAction();
                 }
               : null,
         ),
       ),
     );
+  }
+
+  void signInAction() {
+    Future.delayed(Duration(seconds: 5), () async {
+      print("dang nhap");
+      dynamic result = await _auth.signInWithEmailAndPassword(
+          email: _txtEmailController.text.trim(),
+          password: _txtPassController.text.trim());
+
+      if (result == 'Welcome') {
+        print('sign in');
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(),
+            ),
+            (route) => false);
+      } else {
+        print('erro login : $result');
+        setState(() {
+          loading = false;
+        });
+        showErrAlert(result);
+      }
+    });
   }
 
   void showErrAlert(String mess) {

@@ -5,6 +5,7 @@ import 'package:app_mobile/share/app_button.dart';
 import 'package:app_mobile/share/app_color.dart';
 import 'package:app_mobile/share/app_style.dart';
 import 'package:app_mobile/share/app_textflie.dart';
+import 'package:app_mobile/share/loading_task.dart';
 import 'package:flutter/material.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 
@@ -24,6 +25,7 @@ class _SignUpPageState extends State<SignUpPage> {
   AuthService _auth = AuthService();
   bool _showPass = false;
   bool _showRePass = false;
+  bool _loading = false;
   TextEditingController _txtNameController = TextEditingController();
   TextEditingController _txtPhoneController = TextEditingController();
   TextEditingController _txtEmailController = TextEditingController();
@@ -36,19 +38,22 @@ class _SignUpPageState extends State<SignUpPage> {
       child: Consumer<SignUpBloc>(
         builder: (context, bloc, child) => Scaffold(
           resizeToAvoidBottomInset: false,
-          body: Container(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 8,
-                  child: _buildContainer(bloc),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: _buildSignIn(),
-                ),
-              ],
+          body: LoadingTask(
+            loading: _loading,
+            child: Container(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 8,
+                    child: _buildContainer(bloc),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: _buildSignIn(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -267,39 +272,48 @@ class _SignUpPageState extends State<SignUpPage> {
           text: 'Đăng ký',
           style: AppStyle.h4,
           onpressButton: enable
-              ? () async {
-                  print("Dang ky");
-
-                  dynamic result = await _auth.signUpWithEmailAndPassWord(
-                      _txtNameController.text.trim(),
-                      _txtPhoneController.text.trim(),
-                      _txtEmailController.text.trim(),
-                      _txtPassController.text.trim(), [], []);
-                  if (result == "Account created") {
-                    showSuccesAlert();
-                    Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => AuthenticationPage()),
-                        (route) => false);
-                    setState(() {
-                      _txtNameController.text = '';
-                      _txtPhoneController.text = '';
-                      _txtEmailController.text = '';
-                      _txtPassController.text = '';
-                      _txtRePassController.text = '';
-                    });
-                  } else {
-                    print("Dang ky that bai");
-                    showErrAlert(result);
-                  }
-
-                  ;
+              ? () {
+                  setState(() {
+                    _loading = true;
+                  });
+                  signUpAction();
                 }
               : null,
         ),
       ),
     );
+  }
+
+  void signUpAction() {
+    Future.delayed(Duration(seconds: 5), () async {
+      print("Dang ky");
+
+      dynamic result = await _auth.signUpWithEmailAndPassWord(
+          _txtNameController.text.trim(),
+          _txtPhoneController.text.trim(),
+          _txtEmailController.text.trim(),
+          _txtPassController.text.trim(), [], []);
+      if (result == "Account created") {
+        showSuccesAlert();
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => AuthenticationPage()),
+            (route) => false);
+        setState(() {
+          _txtNameController.text = '';
+          _txtPhoneController.text = '';
+          _txtEmailController.text = '';
+          _txtPassController.text = '';
+          _txtRePassController.text = '';
+        });
+      } else {
+        print("Dang ky that bai");
+        setState(() {
+          _loading = false;
+        });
+        showErrAlert(result);
+      }
+    });
   }
 
   void showErrAlert(String mess) {

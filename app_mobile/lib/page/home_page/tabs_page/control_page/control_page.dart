@@ -67,6 +67,52 @@ class _ControlPageState extends State<ControlPage> {
     print(value);
   }
 
+  void deleteData(int index) async {
+    print("delete: ${dataList[index].id}");
+
+    await DatabaseService(uid: FirebaseAuth.instance.currentUser.uid)
+        .deleteIdDevices(dataList[index].id);
+    setState(() {
+      dataList.removeAt(index);
+    });
+  }
+
+  void showArlet(int index) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        insetAnimationCurve: Curves.bounceInOut,
+        title: Text(
+          "Thông báo",
+          style: TextStyle(fontSize: 23),
+        ),
+        content: Text(
+          "Bạn có muốn xóa Device?",
+          style: TextStyle(fontSize: 19),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: Text("Đồng ý", style: TextStyle(fontSize: 20)),
+            onPressed: () {
+              print("Dong y");
+              deleteData(index);
+              Navigator.pop(context);
+            },
+            isDefaultAction: true, // Chỉnh in đậm cho button
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true, // chỉnh màu đỏ cho nút bấm
+            child: Text("Hủy bỏ", style: TextStyle(fontSize: 20)),
+            onPressed: () {
+              print("Hủy bỏ");
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,7 +137,7 @@ class _ControlPageState extends State<ControlPage> {
           } else {
             return Center(
               child: Text(
-                'Không có Devices',
+                'Không có Devices!',
                 style: TextStyle(fontSize: 23),
               ),
             );
@@ -111,9 +157,25 @@ class _ControlPageState extends State<ControlPage> {
           child: Padding(
               padding: EdgeInsets.all(20),
               child: Column(children: [
-                Text(
-                  'Tủ điều khiển ${dataList[index].name}',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Tủ điều khiển ${dataList[index].name}',
+                      style:
+                          TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+                    ),
+                    GestureDetector(
+                      child: Icon(
+                        Icons.delete,
+                        color: Colors.black54,
+                        size: 25,
+                      ),
+                      onTap: () {
+                        showArlet(index);
+                      },
+                    ),
+                  ],
                 ),
                 SizedBox(
                   height: 15,
