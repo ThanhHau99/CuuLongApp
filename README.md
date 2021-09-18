@@ -51,5 +51,34 @@
 
 </p>
 
+## Add Sensor page
+<p>
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/add_sensor/add_sensor_1.png" width="150" hight = "200">
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/add_sensor/add_sensor_2.png" width="150" hight = "200">
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/add_sensor/add_sensor_error.png" width="150" hight = "200">
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/add_sensor/add_sensor_success.png" width="150" hight = "200">
+ </p>
 
+
+## Device page
+<p>
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/device_page/loading_control.png" width="150" hight = "200">
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/device_page/null_control.png" width="150" hight = "200">
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/device_page/device_page.png" width="150" hight = "200">
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/device_page/delete_device.png" width="150" hight = "200">
+ </p>
+ 
+## Add Device page
+<p>
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/add_device/add_device_1.png" width="150" hight = "200">
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/add_device/add_device_error.png" width="150" hight = "200">
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/add_device/add_device_success.png" width="150" hight = "200">
+ </p>
+
+## Setting page
+<p>
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/setting_page/setting_page.png" width="150" hight = "200">
+  <img src="https://github.com/ThanhHau99/CuuLongApp/blob/main/app_mobile/preview/screenShot/setting_page/infor_page.png" width="150" hight = "200">
+ 
+ </p>
 
