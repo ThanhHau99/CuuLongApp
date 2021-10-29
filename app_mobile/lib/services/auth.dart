@@ -44,8 +44,12 @@ class AuthService {
   }
 
   // sign up with email and pass
-  Future<String> signUpWithEmailAndPassWord(String name, String phone,
-      String email, String password, List idSensors, List idDevices) async {
+  Future<String> signUpWithEmailAndPassWord(
+    String name,
+    String phone,
+    String email,
+    String password,
+  ) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
@@ -57,8 +61,6 @@ class AuthService {
         phone,
         email,
         password,
-        idSensors,
-        idDevices,
       ); //updateUserData
 
       // save user id for later check user logged in

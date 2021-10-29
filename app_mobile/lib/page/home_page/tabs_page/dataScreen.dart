@@ -1,7 +1,9 @@
-import 'dart:ffi';
+import 'package:app_mobile/main.dart';
 import 'package:app_mobile/models/data_status.dart';
+import 'package:app_mobile/models/sensor_user.dart';
 import 'package:app_mobile/page/home_page/farm_details/farmDetails_page.dart';
 import 'package:app_mobile/page/home_page/home_page.dart';
+import 'package:app_mobile/page/home_page/tabs_page/add_farm.dart';
 import 'package:app_mobile/services/database.dart';
 import 'package:app_mobile/share/app_style.dart';
 import 'package:app_mobile/share/widget_card.dart';
@@ -19,12 +21,15 @@ class DataScreen extends StatefulWidget {
 
 class _DataScreenState extends State<DataScreen> {
   List<DataStatus> dataList = [];
+  List<DataStatus> listSensor = [];
   FlutterLocalNotificationsPlugin localNotifications;
+  DatabaseService databaseService;
+  List<SensorUser> id;
 
   @override
-  Void initState() {
+  void initState() {
     super.initState();
-    _loadDataStatus();
+    _loadData();
 
     var androidInitialize = new AndroidInitializationSettings('logo');
 
@@ -51,10 +56,12 @@ class _DataScreenState extends State<DataScreen> {
     await localNotifications.show(0, title, body, generalNotificationDetails);
   }
 
-  void _loadDataStatus() async {
-    List<String> sensorList =
+  void _loadData() async {
+    List<String> idSensor =
         await DatabaseService(uid: FirebaseAuth.instance.currentUser.uid)
-            .getIdSensors();
+            .loadIdSensor();
+
+    print("idSensor: ${idSensor.length}");
 
     DatabaseReference referenceData = FirebaseDatabase.instance.reference();
 
@@ -70,19 +77,22 @@ class _DataScreenState extends State<DataScreen> {
 
       for (var key in keys) {
         debugPrint(key.toString());
-        if (sensorList.contains(key)) {
-          DataStatus data = new DataStatus(
-              values[key]['name'],
-              values[key]['waterT'],
-              values[key]['waterEC'],
-              values[key]['waterSalt'],
-              values[key]['upper'],
-              values[key]['lower'],
-              values[key]['devices1'],
-              values[key]['devices2'],
-              key);
 
-          dataList.add(data);
+        DataStatus data = new DataStatus(
+            values[key]['name'],
+            values[key]['waterT'],
+            values[key]['waterEC'],
+            values[key]['waterSalt'],
+            values[key]['upper'],
+            values[key]['lower'],
+            values[key]['devices1'],
+            values[key]['devices2'],
+            key);
+
+        dataList.add(data);
+
+        if (idSensor.contains(key)) {
+          listSensor.add(data);
         }
       }
       setState(() {
@@ -96,8 +106,26 @@ class _DataScreenState extends State<DataScreen> {
     return Scaffold(
         appBar: AppBar(
           title: Text(
-            "Trang chủ",
+            "Sensor",
           ),
+          actions: [
+            IconButton(
+                icon: Icon(Icons.add),
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddSensor(
+                        dataList: dataList,
+                        listSensor: listSensor,
+                      ),
+                    ),
+                  );
+                  setState(() {
+                    listSensor = result as List<DataStatus>;
+                  });
+                })
+          ],
         ),
         body: RefreshIndicator(
           onRefresh: () {
@@ -108,13 +136,13 @@ class _DataScreenState extends State<DataScreen> {
                     transitionDuration: Duration(seconds: 0)));
             return Future.value(false);
           },
-          child: dataList.length == 0 ? _buildWaitContainer() : _buildList(),
+          child: listSensor.length == 0 ? _buildWaitContainer() : _buildList(),
         ));
   }
 
   Widget _buildWaitContainer() {
     return FutureBuilder(
-        future: Future.delayed(Duration(seconds: 7)),
+        future: Future.delayed(Duration(seconds: 10)),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
@@ -133,7 +161,7 @@ class _DataScreenState extends State<DataScreen> {
 
   Widget _buildList() {
     return ListView.builder(
-        itemCount: dataList.length,
+        itemCount: listSensor.length,
         itemBuilder: (context, index) {
           return WidgetCard(
             child: InkWell(
@@ -142,7 +170,7 @@ class _DataScreenState extends State<DataScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => FarmDetailsPage(
-                      dataStatus: dataList[index],
+                      dataStatus: listSensor[index],
                     ),
                   ),
                 );
@@ -155,7 +183,7 @@ class _DataScreenState extends State<DataScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          dataList[index].name.toString(),
+                          listSensor[index].name.toString(),
                           style: AppStyle.h3.copyWith(color: Colors.black54),
                         ),
                         GestureDetector(
@@ -165,8 +193,8 @@ class _DataScreenState extends State<DataScreen> {
                             size: 25,
                           ),
                           onTap: () {
-                            print("kkkkkkk");
-                            showArlet(index);
+                            print("delete");
+                            showArlet(listSensor[index], index);
                           },
                         )
                       ],
@@ -174,19 +202,19 @@ class _DataScreenState extends State<DataScreen> {
                   ),
                   WidgetRow(
                     text1: 'Nhiệt độ :',
-                    text2: dataList[index].waterT,
+                    text2: listSensor[index].waterT,
                     dv: ' °C',
                     color: Colors.orangeAccent,
                   ),
                   WidgetRow(
                     text1: 'EC :',
-                    text2: dataList[index].waterEC,
+                    text2: listSensor[index].waterEC,
                     dv: ' mS/cm',
                     color: Colors.greenAccent,
                   ),
                   WidgetRow(
                     text1: 'Độ mặn :',
-                    text2: dataList[index].waterSalt,
+                    text2: listSensor[index].waterSalt,
                     dv: ' ppt',
                     color: showNotifi(index) ? Colors.red : Colors.blue,
                   ),
@@ -198,13 +226,13 @@ class _DataScreenState extends State<DataScreen> {
   }
 
   bool showNotifi(int index) {
-    if (dataList[index].waterSalt > dataList[index].upper) {
-      String title = dataList[index].name.toString();
+    if (listSensor[index].waterSalt > listSensor[index].upper) {
+      String title = listSensor[index].name.toString();
       String body = 'Cảnh báo độ mặn vượt ngưỡng mặn trên';
       showNotification(title, body);
       return true;
-    } else if (dataList[index].waterSalt < dataList[index].lower) {
-      String title = dataList[index].name.toString();
+    } else if (listSensor[index].waterSalt < listSensor[index].lower) {
+      String title = listSensor[index].name.toString();
       String body = 'Cảnh báo độ măn dưới ngưỡng măn dưới';
       showNotification(title, body);
       return true;
@@ -212,16 +240,15 @@ class _DataScreenState extends State<DataScreen> {
     return false;
   }
 
-  void deleteData(int index) async {
+  void deleteData(String idSensor, int index) async {
     setState(() {
-      print("delete: ${dataList[index].id}");
-      dataList.removeAt(index);
+      listSensor.removeAt(index);
     });
     await DatabaseService(uid: FirebaseAuth.instance.currentUser.uid)
-        .deleteIdSensor(index);
+        .deleteIdSensor(idSensor);
   }
 
-  void showArlet(int index) {
+  void showArlet(DataStatus sensor, int index) {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
@@ -239,7 +266,7 @@ class _DataScreenState extends State<DataScreen> {
             child: Text("Đồng ý", style: TextStyle(fontSize: 20)),
             onPressed: () {
               print("Dong y");
-              deleteData(index);
+              deleteData(sensor.id, index);
               Navigator.pop(context);
             },
             isDefaultAction: true, // Chỉnh in đậm cho button

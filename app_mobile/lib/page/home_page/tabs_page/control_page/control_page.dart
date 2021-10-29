@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:app_mobile/models/device_model.dart';
+import 'package:app_mobile/page/home_page/tabs_page/control_page/add_devices.dart';
 
 import 'package:app_mobile/services/database.dart';
 import 'package:app_mobile/share/switch_button.dart';
@@ -14,6 +17,7 @@ class ControlPage extends StatefulWidget {
 
 class _ControlPageState extends State<ControlPage> {
   List<DeviceModel> dataList = [];
+  List<DeviceModel> listDevice = [];
 
   @override
   void initState() {
@@ -25,7 +29,7 @@ class _ControlPageState extends State<ControlPage> {
     DatabaseReference referenceData = FirebaseDatabase.instance.reference();
     List<String> deviceList =
         await DatabaseService(uid: FirebaseAuth.instance.currentUser.uid)
-            .getIdDevices();
+            .loadIdDevice();
 
     await referenceData
         .child("Devices")
@@ -39,15 +43,17 @@ class _ControlPageState extends State<ControlPage> {
 
       for (var key in keys) {
         debugPrint(key.toString());
-        if (deviceList.contains(key)) {
-          DeviceModel data = new DeviceModel(
-            key,
-            values[key]['name'],
-            values[key]['device1'],
-            values[key]['device2'],
-          );
+        DeviceModel data = new DeviceModel(
+          key,
+          values[key]['name'],
+          values[key]['device1'],
+          values[key]['device2'],
+        );
 
-          dataList.add(data);
+        dataList.add(data);
+
+        if (deviceList.contains(key)) {
+          listDevice.add(data);
         }
       }
       setState(() {
@@ -67,17 +73,17 @@ class _ControlPageState extends State<ControlPage> {
     print(value);
   }
 
-  void deleteData(int index) async {
-    print("delete: ${dataList[index].id}");
+  void deleteData(String idDevice, int index) async {
+    print("delete: ${listDevice[index].id}");
 
     await DatabaseService(uid: FirebaseAuth.instance.currentUser.uid)
-        .deleteIdDevices(dataList[index].id);
+        .deleteIdDevice(idDevice);
     setState(() {
-      dataList.removeAt(index);
+      listDevice.removeAt(index);
     });
   }
 
-  void showArlet(int index) {
+  void showArlet(DeviceModel device, int index) {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
@@ -95,7 +101,7 @@ class _ControlPageState extends State<ControlPage> {
             child: Text("Đồng ý", style: TextStyle(fontSize: 20)),
             onPressed: () {
               print("Dong y");
-              deleteData(index);
+              deleteData(device.id, index);
               Navigator.pop(context);
             },
             isDefaultAction: true, // Chỉnh in đậm cho button
@@ -121,9 +127,28 @@ class _ControlPageState extends State<ControlPage> {
           title: Text(
             'Điều khiển',
           ),
+          actions: [
+            IconButton(
+                icon: Icon(Icons.add),
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddDevice(
+                        dataList: dataList,
+                        listDevice: listDevice,
+                      ),
+                    ),
+                  );
+                  setState(() {
+                    listDevice = result;
+                  });
+                })
+          ],
         ),
-        body:
-            dataList.length == 0 ? _buildWaitContainer() : _buildListDevices());
+        body: listDevice.length == 0
+            ? _buildWaitContainer()
+            : _buildListDevices());
   }
 
   Widget _buildWaitContainer() {
@@ -147,7 +172,7 @@ class _ControlPageState extends State<ControlPage> {
 
   Widget _buildListDevices() {
     return ListView.builder(
-      itemCount: dataList.length,
+      itemCount: listDevice.length,
       itemBuilder: (_, index) {
         return Card(
           margin: EdgeInsets.fromLTRB(20, 20, 20, 10),
@@ -161,7 +186,7 @@ class _ControlPageState extends State<ControlPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Tủ điều khiển ${dataList[index].name}',
+                      'Tủ điều khiển ${listDevice[index].name}',
                       style:
                           TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
                     ),
@@ -172,7 +197,7 @@ class _ControlPageState extends State<ControlPage> {
                         size: 25,
                       ),
                       onTap: () {
-                        showArlet(index);
+                        showArlet(listDevice[index], index);
                       },
                     ),
                   ],
@@ -201,17 +226,18 @@ class _ControlPageState extends State<ControlPage> {
                     GestureDetector(
                         onTap: () {
                           setState(() {
-                            dataList[index].device1 = !dataList[index].device1;
+                            listDevice[index].device1 =
+                                !listDevice[index].device1;
 
                             updateData(
-                              dataList[index].id,
+                              listDevice[index].id,
                               'device1',
-                              dataList[index].device1,
+                              listDevice[index].device1,
                             );
                           });
                         },
                         child: SWitchButton(
-                          value: dataList[index].device1,
+                          value: listDevice[index].device1,
                         )),
                   ],
                 ),
@@ -239,10 +265,11 @@ class _ControlPageState extends State<ControlPage> {
                     GestureDetector(
                       onTap: () {
                         setState(() {
-                          dataList[index].device2 = !dataList[index].device2;
+                          listDevice[index].device2 =
+                              !listDevice[index].device2;
 
-                          updateData(dataList[index].id, 'device2',
-                              dataList[index].device2);
+                          updateData(listDevice[index].id, 'device2',
+                              listDevice[index].device2);
                         });
                       },
                       child: SWitchButton(

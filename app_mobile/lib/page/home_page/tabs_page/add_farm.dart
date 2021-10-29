@@ -1,6 +1,5 @@
-import 'dart:ffi';
-
 import 'package:app_mobile/bloc/add_farm_bloc.dart';
+import 'package:app_mobile/models/data_status.dart';
 import 'package:app_mobile/services/database.dart';
 import 'package:app_mobile/share/app_button.dart';
 import 'package:app_mobile/share/app_style.dart';
@@ -15,23 +14,18 @@ import 'package:provider/provider.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
-class AddFarm extends StatefulWidget {
+class AddSensor extends StatefulWidget {
+  final List<DataStatus> dataList;
+  final List<DataStatus> listSensor;
+
+  const AddSensor({Key key, this.dataList, this.listSensor}) : super(key: key);
   @override
-  _AddFarmState createState() => _AddFarmState();
+  _AddSensorState createState() => _AddSensorState();
 }
 
-class _AddFarmState extends State<AddFarm> {
+class _AddSensorState extends State<AddSensor> {
   TextEditingController _nameDeviceController = new TextEditingController();
   TextEditingController _idDeviceController = new TextEditingController();
-
-  List<String> listSensors = [];
-
-  @override
-  Void initState() {
-    super.initState();
-
-    loadDataStatus();
-  }
 
   @override
   Widget build(
@@ -42,6 +36,12 @@ class _AddFarmState extends State<AddFarm> {
           title: Text(
             "Thêm Sensor",
           ),
+          leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                print("back");
+                Navigator.pop(context, widget.listSensor);
+              }),
         ),
         body: Provider<AddFarmBloc>.value(
           value: AddFarmBloc(),
@@ -96,50 +96,24 @@ class _AddFarmState extends State<AddFarm> {
     );
   }
 
-  void loadDataStatus() {
-    DatabaseReference referenceData = FirebaseDatabase.instance.reference();
-
-    referenceData
-        .child("Devices")
-        .child("status")
-        .once()
-        .then((DataSnapshot dataSnapShot) {
-      listSensors.clear();
-
-      var keys = dataSnapShot.value.keys;
-      //var values = dataSnapShot.value;
-
-      for (var key in keys) {
-        debugPrint(key.toString());
-        listSensors.add(key);
-      }
-
-      setState(() {
-        /*Future.delayed(Duration(seconds: 0), () {
-          loadData();
-        });*/
-      });
-    });
-  }
-
-  void addFarmToAccount() async {
+  void addFarmToAccount(int index) async {
     if (_idDeviceController.text.isNotEmpty) {
-      for (var sensor in listSensors) {
-        debugPrint("Sensor in list: ${sensor.toString()}");
-        if (_idDeviceController.text.toLowerCase() == sensor) {
+      for (var sensor in widget.dataList) {
+        debugPrint("Sensor in list: ${sensor.id}");
+        if (_idDeviceController.text.trim() == sensor.id) {
           debugPrint("Stated update ${_idDeviceController.text}");
           await DatabaseService(uid: FirebaseAuth.instance.currentUser.uid)
-              .updateIdSensor(_idDeviceController.text);
+              .saveIdSensor(
+            _nameDeviceController.text.trim(),
+            _idDeviceController.text.trim(),
+          );
         }
       }
-
-      debugPrint("Sensor id: ${_idDeviceController.text}");
-    } else {
-      debugPrint("Sensor id is empty");
+      widget.listSensor.add(widget.dataList[index]);
     }
   }
 
-  void addNameToAccount() async {
+  void addNameToAccount(int index) async {
     if (_nameDeviceController.text.isNotEmpty) {
       debugPrint("Stated update name");
       DatabaseReference referenceData = FirebaseDatabase.instance.reference();
@@ -149,6 +123,11 @@ class _AddFarmState extends State<AddFarm> {
           .child(_idDeviceController.text)
           .child("name")
           .set(_nameDeviceController.text);
+      final newName = widget.dataList
+          .firstWhere((element) => element.name == widget.dataList[index].name);
+      setState(() {
+        newName.name = _nameDeviceController.text;
+      });
     }
   }
 
@@ -156,12 +135,13 @@ class _AddFarmState extends State<AddFarm> {
     setState(() {
       loop:
       if (_nameDeviceController.text != "" && _idDeviceController.text != "") {
-        for (int i = 0; i < listSensors.length; i++) {
-          print("Sensor list: ${listSensors.toString()}");
-          if (listSensors[i] == _idDeviceController.text) {
-            addFarmToAccount();
-            addNameToAccount();
+        for (int index = 0; index < widget.dataList.length; index++) {
+          print("Sensor list: ${widget.dataList.toString()}");
+          if (widget.dataList[index].id == _idDeviceController.text) {
+            addFarmToAccount(index);
+            addNameToAccount(index);
             showSuccesAlert();
+
             setState(() {
               _nameDeviceController.text = '';
               _idDeviceController.text = '';
@@ -171,11 +151,6 @@ class _AddFarmState extends State<AddFarm> {
         }
 
         showErrAlert();
-
-        setState(() {
-          _nameDeviceController.text = '';
-          _idDeviceController.text = '';
-        });
       }
     });
   }

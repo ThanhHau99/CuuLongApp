@@ -31,32 +31,34 @@ class _SignInPageState extends State<SignInPage> {
   final AuthService _auth = AuthService();
   @override
   Widget build(BuildContext context) {
-    return Provider<SignInBloc>.value(
-      value: SignInBloc(),
-      child: Consumer<SignInBloc>(
-        builder: (context, bloc, child) => Scaffold(
-          resizeToAvoidBottomInset: false,
-          body: LoadingTask(
-            loading: loading,
-            child: Container(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Expanded(flex: 1, child: Container()),
-                  Expanded(
-                    flex: 3,
-                    child: _buildLogoApp(),
+    return Scaffold(
+      body: LoadingTask(
+        loading: loading,
+        child: SingleChildScrollView(
+          child: Provider<SignInBloc>.value(
+            value: SignInBloc(),
+            child: Consumer<SignInBloc>(
+              builder: (context, bloc, child) {
+                return SafeArea(
+                  child: Container(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildLogoApp(),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        _buildContainer(bloc),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        _buildSignUp(),
+                      ],
+                    ),
                   ),
-                  Expanded(
-                    flex: 4,
-                    child: _buildContainer(bloc),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: _buildSignUp(),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ),
@@ -65,10 +67,14 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   Widget _buildLogoApp() {
+    Size size = MediaQuery.of(context).size;
     return Container(
-      padding: EdgeInsets.only(top: 20),
       child: Center(
-        child: Image.asset(AppImages.logoApp),
+        child: Image.asset(
+          AppImages.logoApp,
+          height: size.height * 0.4,
+          width: size.height * 0.4,
+        ),
       ),
     );
   }
@@ -76,7 +82,6 @@ class _SignInPageState extends State<SignInPage> {
   Widget _buildContainer(SignInBloc bloc) {
     return Container(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Padding(
             padding: const EdgeInsets.only(bottom: 20),
@@ -164,20 +169,17 @@ class _SignInPageState extends State<SignInPage> {
                   hintText: '******',
                   prefixIcon: Icon(Icons.lock),
                   errorText: mess,
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(right: 15, bottom: 19),
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _showPass = !_showPass;
-                  });
-                },
-                child: Icon(
-                  Icons.remove_red_eye_outlined,
-                  color: _showPass ? AppColor.primaryColor : Colors.black,
+                  suffixIcon: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _showPass = !_showPass;
+                      });
+                    },
+                    child: Icon(
+                      Icons.remove_red_eye_outlined,
+                      color: _showPass ? AppColor.primaryColor : Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),

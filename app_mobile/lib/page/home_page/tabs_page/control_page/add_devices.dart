@@ -1,4 +1,5 @@
 import 'package:app_mobile/bloc/add_farm_bloc.dart';
+import 'package:app_mobile/models/device_model.dart';
 import 'package:app_mobile/services/database.dart';
 import 'package:app_mobile/share/app_button.dart';
 import 'package:app_mobile/share/app_textflie.dart';
@@ -12,66 +13,38 @@ import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 class AddDevice extends StatefulWidget {
+  final List<DeviceModel> dataList;
+  final List<DeviceModel> listDevice;
+
+  const AddDevice({Key key, this.dataList, this.listDevice}) : super(key: key);
+
   @override
   _AddDeviceState createState() => _AddDeviceState();
 }
 
 class _AddDeviceState extends State<AddDevice> {
-  List<String> listDevices = [];
   TextEditingController _txtNameDevice = TextEditingController();
   TextEditingController _txtIdDevice = TextEditingController();
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    loadDataControl();
-  }
-
-  void loadDataControl() {
-    DatabaseReference referenceData = FirebaseDatabase.instance.reference();
-
-    referenceData
-        .child("Devices")
-        .child("control")
-        .once()
-        .then((DataSnapshot dataSnapShot) {
-      listDevices.clear();
-
-      var keys = dataSnapShot.value.keys;
-      //var values = dataSnapShot.value;
-
-      for (var key in keys) {
-        debugPrint(key.toString());
-        listDevices.add(key);
-      }
-
-      setState(() {
-        /*Future.delayed(Duration(seconds: 0), () {
-          loadData();
-        });*/
-      });
-    });
-  }
-
-  void addIdDevice() async {
+  void addIdDevice(int index) async {
     if (_txtIdDevice.text.isNotEmpty) {
-      for (var device in listDevices) {
+      for (var device in widget.dataList) {
         debugPrint("Device in list: ${device.toString()}");
-        if (_txtIdDevice.text.toLowerCase() == device) {
+        if (_txtIdDevice.text.trim() == device.id) {
           debugPrint("Stated update ${_txtIdDevice.text}");
           await DatabaseService(uid: FirebaseAuth.instance.currentUser.uid)
-              .updateIdDevices(_txtIdDevice.text);
+              .saveIdDevice(
+            _txtNameDevice.text.trim(),
+            _txtIdDevice.text.trim(),
+          );
         }
       }
 
-      debugPrint("Device id: ${_txtIdDevice.text}");
-    } else {
-      debugPrint("Device id is empty");
+      widget.listDevice.add(widget.dataList[index]);
     }
   }
 
-  void addNameDevice() async {
+  void addNameDevice(int index) async {
     if (_txtNameDevice.text.isNotEmpty) {
       debugPrint("Stated update name");
       DatabaseReference referenceData = FirebaseDatabase.instance.reference();
@@ -81,6 +54,12 @@ class _AddDeviceState extends State<AddDevice> {
           .child(_txtIdDevice.text)
           .child("name")
           .set(_txtNameDevice.text);
+
+      final newName = widget.dataList
+          .firstWhere((element) => element.name == widget.dataList[index].name);
+      setState(() {
+        newName.name = _txtNameDevice.text;
+      });
     }
   }
 
@@ -88,11 +67,11 @@ class _AddDeviceState extends State<AddDevice> {
     setState(() {
       loop:
       if (_txtNameDevice.text != "" && _txtIdDevice.text != "") {
-        for (int i = 0; i < listDevices.length; i++) {
-          print("Sensor list: ${listDevices.toString()}");
-          if (listDevices[i] == _txtIdDevice.text) {
-            addIdDevice();
-            addNameDevice();
+        for (int index = 0; index < widget.dataList.length; index++) {
+          print("Sensor list: ${widget.dataList.toString()}");
+          if (widget.dataList[index].id == _txtIdDevice.text) {
+            addIdDevice(index);
+            addNameDevice(index);
             showSuccesAlert();
             setState(() {
               _txtNameDevice.text = '';
@@ -103,11 +82,6 @@ class _AddDeviceState extends State<AddDevice> {
         }
 
         showErrAlert();
-
-        setState(() {
-          _txtNameDevice.text = '';
-          _txtIdDevice.text = '';
-        });
       }
     });
   }
@@ -141,6 +115,11 @@ class _AddDeviceState extends State<AddDevice> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Thêm thiết bị điều khiển'),
+        leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context, widget.listDevice);
+            }),
       ),
       body: Provider<AddFarmBloc>.value(
         value: AddFarmBloc(),

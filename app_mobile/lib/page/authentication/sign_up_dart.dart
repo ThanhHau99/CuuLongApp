@@ -3,6 +3,7 @@ import 'package:app_mobile/page/wrapper/authentication.dart';
 import 'package:app_mobile/services/auth.dart';
 import 'package:app_mobile/share/app_button.dart';
 import 'package:app_mobile/share/app_color.dart';
+import 'package:app_mobile/share/app_images.dart';
 import 'package:app_mobile/share/app_style.dart';
 import 'package:app_mobile/share/app_textflie.dart';
 import 'package:app_mobile/share/loading_task.dart';
@@ -24,7 +25,7 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   AuthService _auth = AuthService();
   bool _showPass = false;
-  bool _showRePass = false;
+
   bool _loading = false;
   TextEditingController _txtNameController = TextEditingController();
   TextEditingController _txtPhoneController = TextEditingController();
@@ -33,29 +34,49 @@ class _SignUpPageState extends State<SignUpPage> {
   TextEditingController _txtRePassController = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    return Provider<SignUpBloc>.value(
-      value: SignUpBloc(),
-      child: Consumer<SignUpBloc>(
-        builder: (context, bloc, child) => Scaffold(
-          resizeToAvoidBottomInset: false,
-          body: LoadingTask(
-            loading: _loading,
-            child: Container(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Expanded(
-                    flex: 8,
-                    child: _buildContainer(bloc),
+    return LoadingTask(
+      loading: _loading,
+      child: Scaffold(
+        body: SingleChildScrollView(
+          child: Provider<SignUpBloc>.value(
+            value: SignUpBloc(),
+            child: Consumer<SignUpBloc>(
+              builder: (context, bloc, child) {
+                return SafeArea(
+                  child: Container(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildLogoApp(),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        _buildContainer(bloc),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        _buildSignIn(),
+                      ],
+                    ),
                   ),
-                  Expanded(
-                    flex: 1,
-                    child: _buildSignIn(),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoApp() {
+    Size size = MediaQuery.of(context).size;
+    return Container(
+      child: Center(
+        child: Image.asset(
+          AppImages.logoApp,
+          height: size.height * 0.2,
+          width: size.height * 0.2,
         ),
       ),
     );
@@ -77,7 +98,6 @@ class _SignUpPageState extends State<SignUpPage> {
           _phoneForm(bloc),
           _emailForm(bloc),
           _passForm(bloc),
-          _rePassForm(bloc),
           _buttonSignUp(bloc),
         ],
       ),
@@ -193,67 +213,17 @@ class _SignUpPageState extends State<SignUpPage> {
                   hintText: '******',
                   prefixIcon: Icon(Icons.lock),
                   errorText: mess,
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(right: 15, bottom: 19),
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _showPass = !_showPass;
-                  });
-                },
-                child: Icon(
-                  Icons.remove_red_eye_outlined,
-                  color: _showPass ? AppColor.primaryColor : Colors.black,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _rePassForm(SignUpBloc bloc) {
-    return StreamProvider<String>.value(
-      initialData: null,
-      value: bloc.rePassStream,
-      child: Consumer<String>(
-        builder: (context, mess, child) => Stack(
-          alignment: AlignmentDirectional.centerEnd,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: TextField(
-                controller: _txtRePassController,
-                onChanged: (text) {
-                  //bloc.rePassSink.add(text);
-                },
-                obscureText: !_showRePass,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  suffixIcon: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _showPass = !_showPass;
+                      });
+                    },
+                    child: Icon(
+                      Icons.remove_red_eye_outlined,
+                      color: _showPass ? AppColor.primaryColor : Colors.black,
+                    ),
                   ),
-                  labelText: 'Nhập lại mật khẩu',
-                  hintText: '******',
-                  prefixIcon: Icon(Icons.lock),
-                  //errorText: mess,
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(right: 15, bottom: 19),
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _showRePass = !_showRePass;
-                  });
-                },
-                child: Icon(
-                  Icons.remove_red_eye_outlined,
-                  color: _showRePass ? AppColor.primaryColor : Colors.black,
                 ),
               ),
             ),
@@ -289,10 +259,11 @@ class _SignUpPageState extends State<SignUpPage> {
       print("Dang ky");
 
       dynamic result = await _auth.signUpWithEmailAndPassWord(
-          _txtNameController.text.trim(),
-          _txtPhoneController.text.trim(),
-          _txtEmailController.text.trim(),
-          _txtPassController.text.trim(), [], []);
+        _txtNameController.text.trim(),
+        _txtPhoneController.text.trim(),
+        _txtEmailController.text.trim(),
+        _txtPassController.text.trim(),
+      );
       if (result == "Account created") {
         showSuccesAlert();
         Navigator.pushAndRemoveUntil(
